@@ -35,11 +35,27 @@
 - 用户反馈与结论：
 ```
 
+## 2026-07-20 - Day 1 - 用户表设计与数据库脚本
+
+- 功能点：Day 1 功能点 2。
+- 代码批次：用户、角色和用户角色关系表设计。
+- 状态：待用户 Review。
+- 目标：只完成三张用户相关表和版本化 MySQL 脚本，不进入 Java 用户业务与 Vue 开发。
+- 完成内容：新增 `user`、`role`、`user_role` 建表脚本；设计主键、唯一约束、查询索引、状态检查、审计时间和外键关系；修正开发配置中的 MySQL 默认端口 `330 -> 3306`。
+- 主要文件：`server/src/main/resources/db/schema/V001__create_user_tables.sql`、`server/src/main/resources/application-dev.yml`、`docs/learning/day-01.md`、`docs/PROJECT_OVERVIEW.md`。
+- 接口变化：无。
+- 数据库变化：新增 3 张表的版本化定义；`user_role` 使用联合主键，两个外键采用 `ON DELETE CASCADE`。
+- 测试结果：脚本在隔离的 MySQL 8.0.43 实例执行成功；3 张表、2 个外键、2 个 CHECK 约束均存在；4 个关键非法写入均被拒绝；级联删除验证通过。`mvn -B test` 构建成功，3 个测试全部通过。
+- 学习建议：重点区分应用层校验与数据库约束，理解多对多中间表、联合主键、外键和索引各自负责的问题。
+- 面试表达：用户与角色通过关联表建模多对多关系，以联合主键保证授权幂等，以唯一约束和外键作为数据库层最后一道一致性防线。
+- Review 关注点：字段长度与空值设计、约束和索引是否服务真实查询、级联删除策略、关键字表名的处理、是否严格保持功能点范围。
+- 用户反馈与结论：待填写。
+
 ## 2026-07-20 - Day 1 - 后端工程与健康检查
 
 - 功能点：Day 1 功能点 1。
 - 代码批次：后端 Maven 骨架、基础依赖、健康检查与 Swagger。
-- 状态：待用户 Review。
+- 状态：已确认。
 - 目标：创建可运行的 Java 17 + Spring Boot 3 后端骨架，不进入用户、数据库和 Vue 功能。
 - 完成内容：配置 Spring MVC、Validation、MyBatis-Plus、MySQL、Spring Security、Swagger 和测试依赖；增加启动类、健康检查 DTO/Controller、开发配置、临时 Security 放行配置和集成测试。
 - 主要文件：`server/pom.xml`、`CommunityApplication.java`、`SecurityConfig.java`、`HealthController.java`、`HealthResponse.java`、`application.yml`、`application-dev.yml`、`HealthControllerIntegrationTest.java`。
@@ -49,7 +65,7 @@
 - 学习建议：先沿着 `HTTP -> Controller -> DTO -> JSON` 调用链理解 Spring MVC；阅读 `pom.xml` 时区分 Starter、运行时依赖和测试依赖；注意当前 Security 全放行只是 Day 1 的临时边界。
 - 面试表达：Spring Boot Starter 负责聚合兼容依赖和自动配置；健康检查使用 Controller 暴露 REST 接口，Spring MVC 通过 Jackson 将 DTO 序列化为 JSON。
 - Review 关注点：是否保持功能点 1 范围、依赖选择是否清晰、配置是否泄露敏感信息、Swagger 和健康检查是否有自动化测试。
-- 用户反馈与结论：待填写。
+- 用户反馈与结论：2026-07-20 用户确认功能点 1 通过，同意进入 Day 1 功能点 2。
 
 ## 2026-07-15 - 规划与文档基线
 
