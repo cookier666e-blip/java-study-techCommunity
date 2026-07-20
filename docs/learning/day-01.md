@@ -1,9 +1,17 @@
 # Day 1：工程初始化与用户模块准备
 
-- 状态：未开始
+- 状态：进行中（功能点 1 待用户 Review）
 - 预计时间：5 小时 40 分钟
 - 前置条件：安装 Java 17、Maven、MySQL、Node.js 和 IDE
-- 用户确认：未确认
+- 用户确认：功能点 1 待 Review；功能点 2、3 未开始
+
+## 功能点进度
+
+| 功能点 | 状态 | Review 结论 |
+|---|---|---|
+| 1. 后端工程与健康检查 | 待用户 Review | 待填写 |
+| 2. 用户表设计与数据库脚本 | 未开始 | - |
+| 3. Vue 工程与前后端连通 | 未开始 | - |
 
 ## 今日目标
 
@@ -72,6 +80,18 @@
 ```text
 使用 $spring-vue-learning-coach，执行 Day 1 功能点 3。前提是功能点 2 已由我确认。只创建 Vue 3 + TypeScript + Vite 前端骨架，配置 Router、Pinia、Axios、Element Plus、开发环境 API 地址和错误处理，在首页调用后端健康检查接口。不要实现注册登录页面。完成后运行前端构建或类型检查，并验证前后端连通；更新 Day 1 文档和 DEVELOPMENT_SUMMARY.md，给出 Vue 与后端联调学习建议，标记“待用户 Review”并停止。等待我确认后再考虑当天 Git commit。
 ```
+
+## 功能点 1 执行记录
+
+- 执行日期：2026-07-20
+- 状态：待用户 Review
+- 完成内容：创建 Java 17、Spring Boot 3.4.5、Maven 后端骨架；配置 Spring MVC、Validation、MyBatis-Plus、MySQL、Spring Security、Swagger 和测试依赖；实现健康检查接口。
+- 接口：`GET /api/health`
+- Swagger：`/swagger-ui/index.html`，OpenAPI JSON 为 `/v3/api-docs`。
+- 测试：`mvn -B clean test` 通过，3 个集成测试全部成功。
+- 运行验收：健康检查返回 `UP`，OpenAPI `3.1.0`，Swagger UI 返回 HTTP 200。
+- 当前限制：尚未创建数据库表、Mapper、用户业务和 Vue；MyBatis-Plus 启动时提示未发现 Mapper，符合当前功能点范围。
+- Review 重点：依赖版本与范围、临时 Security 全放行策略、健康检查 DTO、配置中的环境变量、测试覆盖。
 
 ## 原理学习
 

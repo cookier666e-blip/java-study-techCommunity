@@ -35,6 +35,22 @@
 - 用户反馈与结论：
 ```
 
+## 2026-07-20 - Day 1 - 后端工程与健康检查
+
+- 功能点：Day 1 功能点 1。
+- 代码批次：后端 Maven 骨架、基础依赖、健康检查与 Swagger。
+- 状态：待用户 Review。
+- 目标：创建可运行的 Java 17 + Spring Boot 3 后端骨架，不进入用户、数据库和 Vue 功能。
+- 完成内容：配置 Spring MVC、Validation、MyBatis-Plus、MySQL、Spring Security、Swagger 和测试依赖；增加启动类、健康检查 DTO/Controller、开发配置、临时 Security 放行配置和集成测试。
+- 主要文件：`server/pom.xml`、`CommunityApplication.java`、`SecurityConfig.java`、`HealthController.java`、`HealthResponse.java`、`application.yml`、`application-dev.yml`、`HealthControllerIntegrationTest.java`。
+- 接口变化：新增 `GET /api/health`，返回 `{"status":"UP","application":"community-server"}`；新增 `/v3/api-docs` 和 `/swagger-ui/index.html`。
+- 数据库变化：无。只配置 MySQL 连接环境变量，未创建表和 Mapper。
+- 测试结果：Java 17.0.14、Maven 3.9.16；`mvn -B clean test` 构建成功，3 个测试全部通过；真实 HTTP 验证健康检查、OpenAPI 和 Swagger UI 均成功。
+- 学习建议：先沿着 `HTTP -> Controller -> DTO -> JSON` 调用链理解 Spring MVC；阅读 `pom.xml` 时区分 Starter、运行时依赖和测试依赖；注意当前 Security 全放行只是 Day 1 的临时边界。
+- 面试表达：Spring Boot Starter 负责聚合兼容依赖和自动配置；健康检查使用 Controller 暴露 REST 接口，Spring MVC 通过 Jackson 将 DTO 序列化为 JSON。
+- Review 关注点：是否保持功能点 1 范围、依赖选择是否清晰、配置是否泄露敏感信息、Swagger 和健康检查是否有自动化测试。
+- 用户反馈与结论：待填写。
+
 ## 2026-07-15 - 规划与文档基线
 
 - 状态：已完成文档初始化，未涉及业务代码确认。
