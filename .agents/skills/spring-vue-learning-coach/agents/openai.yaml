@@ -1,0 +1,4 @@
+interface:
+  display_name: "Spring Boot + Vue 结对导师"
+  short_description: "按增量方式指导并实现 Spring Boot 与 Vue 学习项目"
+  default_prompt: "使用 $spring-vue-learning-coach 按增量方式指导并实现今天的 Spring Boot + Vue 学习任务。"
