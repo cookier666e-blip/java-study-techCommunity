@@ -1,9 +1,9 @@
 # Day 1：工程初始化与用户模块准备
 
-- 状态：进行中（功能点 3 待用户 Review）
+- 状态：已完成（3 个功能点均已确认）
 - 预计时间：5 小时 40 分钟
 - 前置条件：安装 Java 17、Maven、MySQL、Node.js 和 IDE
-- 用户确认：功能点 1、2 已确认；功能点 3 待 Review
+- 用户确认：功能点 1、2、3 均已确认
 
 ## 功能点进度
 
@@ -11,7 +11,7 @@
 |---|---|---|
 | 1. 后端工程与健康检查 | 已确认 | 2026-07-20 用户确认通过 |
 | 2. 用户表设计与数据库脚本 | 已确认 | 2026-07-20 用户确认通过 |
-| 3. Vue 工程与前后端连通 | 待用户 Review | 待填写 |
+| 3. Vue 工程与前后端连通 | 已确认 | 2026-07-21 用户确认通过 |
 
 ## 今日目标
 
@@ -133,7 +133,7 @@
 ## 功能点 3 执行记录
 
 - 执行日期：2026-07-21
-- 状态：待用户 Review
+- 状态：已确认
 - 完成内容：创建 Vue 3 + TypeScript + Vite 前端骨架，接入 Vue Router、Pinia、Axios 和 Element Plus；首页调用后端健康检查接口并覆盖加载、成功、失败和重试状态。
 - 请求链路：`HomeView -> health.ts -> Axios -> /api/health -> Vite proxy -> Spring Boot:8080`。
 - 环境配置：前端开发端口为 `3000`；`VITE_API_BASE_URL=/api`；代理目标默认为 `http://localhost:8080`。
@@ -143,6 +143,7 @@
 - 验证结果：`pnpm build` 通过 TypeScript 检查和 Vite 生产构建；通过 `http://127.0.0.1:3000/api/health` 实际返回 `UP / community-server`。
 - 当前环境：使用工作区提供的 Node.js 24.14.0 和 pnpm 11.9.0 完成验证；系统 PATH 尚未安装 Node.js，日常开发前仍需安装 Node.js LTS。
 - Review 重点：API 请求是否集中、错误状态是否完整、Vite 代理与 Axios `baseURL` 的职责、Pinia 是否避免保存页面局部状态、Element Plus 是否按需加载。
+- Review 结果：2026-07-21 用户确认功能点 3 通过，同意进入 Day 2。
 
 ### 学习建议
 
@@ -157,11 +158,14 @@
 ## 原理学习
 
 1. Spring Boot 为什么能通过启动类和依赖自动配置 Web 应用。
-   Spring Boot 用 @SpringBootApplication 开启自动配置和组件扫描；再根据 classpath 上的 starter（如 spring-boot-starter-web）条件装配内嵌 Tomcat、DispatcherServlet、Jackson 等。开发者只需声明依赖和业务 Controller，不必手写传统 XML/Servlet 初始化。
+  @L:   Spring Boot 用 @SpringBootApplication 开启自动配置和组件扫描；再根据 classpath 上的 starter（如 spring-boot-starter-web）条件装配内嵌 Tomcat、DispatcherServlet、Jackson 等。开发者只需声明依赖和业务 Controller，不必手写传统 XML/Servlet 初始化。
 3. IOC 容器为什么比手动 `new` 更适合管理企业项目对象。
-手动 new 适合小脚本；企业项目对象多、依赖复杂、要可测可替换。IOC 把创建和装配交给容器，业务类只关心协作关系，便于统一生命周期、替换实现、挂事务/安全和写单测。
+@L:  手动 new 适合小脚本；企业项目对象多、依赖复杂、要可测可替换。IOC 把创建和装配交给容器，业务类只关心协作关系，便于统一生命周期、替换实现、挂事务/安全和写单测。
 面试可补一句：IOC 解决「怎么创建」；DI（依赖注入）是手段；AOP 等能力通常也建立在「对象由容器管理」之上。
 4. 一次 HTTP 请求如何经过 DispatcherServlet、Controller 并返回 JSON。
+@L: dependencies（直接依赖）直接引入并下载指定的 JAR 包到当前项目中。
+dependencyManagement（依赖管理）仅仅是一个“版本控制字典”或“采购目录”。它不会真正下载任何 JAR 包。
+
 
 ## 面试问题
 
@@ -172,6 +176,7 @@
 问题：为什么企业项目需要 Controller、Service、Mapper 分层？  
 回答：分层隔离协议处理、业务规则和数据访问，便于测试、复用和修改，避免一个类同时承担多个职责。  
 追问：简单 CRUD 是否也必须建立 Service？
+@L:  简单 CRUD 必须建立 Service 层，这是为了守住架构的底线（职责分离、事务管理、集中校验）。但在小体量项目中，你可以采用“Just Enough Architecture（刚好足够的架构）”原则，省略 Service 接口，直接写实现类，在规范与效率之间找到最佳平衡。
 
 问题：Maven 的作用是什么？  
 回答：统一管理依赖、生命周期、插件和构建产物，使不同环境可以重复构建项目。  
@@ -262,3 +267,49 @@ COMMENT = '...'：为整张表添加注释说明。
                     ↓
             Jackson 把 HealthResponse 写成 JSON（自动配）
 你自己写的只有 Controller；Tomcat、Servlet、JSON 转换都是 starter + 自动配置给的。
+
+Spring Boot、Maven、Spring MVC 和 MyBatis-Plus 的职责
+Spring Boot：快速整合工具，负责搭建和管理整个项目（自动配置 Spring MVC 等组件，省去手动配置）。
+Spring MVC：Web 层实现框架（处理http请求/响应）。
+MyBatis-Plus：房子里的数据库管理员（负责操作数据库）
+
+Maven：仓库管理员（负责下载和管理项目依赖）
+
+                 用户
+                  │
+             HTTP 请求
+                  │
+                  ▼
+               Tomcat
+        	  │
+         	  ▼
+            Spring MVC
+                  │
+            Controller
+                  │
+                  ▼
+              Service
+                  │
+                  ▼
+           MyBatis-Plus
+                  │
+              MyBatis
+                  │
+                  ▼
+               MySQL
+
+Tomcat 是一个 Web 服务器（准确来说，是 Servlet 容器），负责接收浏览器的 HTTP 请求，监听网络端口，解析 HTTP 协议。并把请求交给你的 Java 程序（把请求交给 Spring MVC）处理。把处理结果返回给浏览器。
+
+Spring Boot 是应用框架。Tomcat 是 Web 服务器。Spring Boot 默认会内嵌Tomcat。
+
+JWT（全称 JSON Web Token）是目前互联网应用中最主流的身份验证和信息交换标准。
+
+结合你之前了解的 Tomcat 和 Servlet，JWT 通常用于解决“服务器怎么知道当前请求是谁发的”这个问题。
+
+MockMvc 是 Spring 测试框架（Spring Test）提供的核心组件，专门用于对 Spring MVC 的 Controller 层（Web 层） 进行单元测试。
+
+    mockMvc.perform(请求)       // 1. 执行请求：模拟发送一个 GET/POST 请求
+        .andExpect(断言)        // 2. 预期断言：验证返回的状态码、JSON内容是否符合预期
+        .andDo(操作);           // 3. 辅助操作：比如把请求和响应的详细信息打印到控制台，方便调试
+
+
