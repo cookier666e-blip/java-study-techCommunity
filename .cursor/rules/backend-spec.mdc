@@ -1,0 +1,256 @@
+---
+description: 后端开发使用规范
+---
+
+## 1. 服务 URL 定义规范 (url-path-spec)
+
+**URL 格式：** `/{中台名称}/{实体名称}/{版本}/{服务方法名称}`
+- **请求方式**：必须使用POST请求
+- **中台名称**：必须以 `center` 结尾（如：`doc_center`）。
+- **实体名称**：对应中台实体，支持多级路径（如：`company/invoice_title`）。
+- **版本**：格式为 `v{数字}`（如：`v1`, `v2`）。
+- **方法名称**：描述动作，单词间用下划线 `_` 分隔（如：`get_by_id`, `save`）。
+
+## 2. 接口契约规范 (interface-contract-spec)
+
+### 2.1 DTO 规范
+- **注解要求**：
+  - 类必须包含 `@ApiModel(description = "...")`，描述必须清晰。
+  - 属性必须包含 `@ApiModelProperty`，描述字段含义。
+- **公共 DTO 复用**：优先复用 `yqn-model` 中的通用对象（如 `BranchVO`, `WarehouseDTO`,`CompanyVO`, `UserInfoVO`, `IdAndDescVO` 等）。
+- **枚举值**:枚举类型返回应使用IdAndDescVO
+
+### 2.2 接口定义要求 (Swagger & Wrapper)
+- **注解要求**：
+  - 类级别使用 `@Api`。
+  - 方法级别使用 `@ApiOperation` 和 `@ApiImplicitParam`（标注 body 参数类型）。
+- **包装要求**：
+  - **请求入参**：统一使用 `Request<T>`。
+  - **响应出参**：统一使用 `Response<T>`。
+  - **列表场景**：入参继承 `RequestList`，响应使用 `ResponseList<T>`。
+- **用户信息获取要求**：
+  - 若接口处理逻辑需要 `userId`，必须优先从请求头中获取，不要在业务 DTO / body 中重复传递 `userId`。
+  - 统一使用：`request.getHeader().getxUserId();`
+
+**正确示例：**
+```java
+import com.yqn.model.Request;
+import com.yqn.model.Response;
+import com.yqn.model.request.AppendPropertiesDTO;
+import com.yqn.model.request.IdParam;
+import com.yqn.model.ResponseList;
+import com.yqn.model.RequestList;
+import com.yqn.lib.logging.annotations.RestApi;
+
+@Api(value = "V2BC相关接口", tags = "V2BC相关接口")
+@RequestMapping("/doc_center/booking_confirm/v2")
+public interface BookingConfirmApi {
+
+    @ApiOperation(value = "保存BC", notes = "保存BC", response = DocSaveRespDTO.class)
+    @ApiImplicitParam(name = "request", value = "request", dataType = "Request«AppendPropertiesDTO«BookingConfirmSaveParam»»", paramType = "body")
+    @PostMapping(value = "/save")
+    Response<DocSaveRespDTO> save(@RequestBody Request<AppendPropertiesDTO<BookingConfirmSaveParam>> request);
+
+    @ApiOperation(value = "查询BC列表", notes = "查询BC列表", response = BookingConfirmDTO.class)
+    @ApiImplicitParam(name = "request", value = "request", dataType = "BookingConfirmQueryParam", paramType = "body")
+    @PostMapping(value = "/query_list")
+    Response<ResponseList<BookingConfirmDTO>> queryBookingList(@RequestBody Request<BookingConfirmQueryParam> request);
+}
+```
+### 接口实现
+```java
+
+@RestController
+public class BookingConfirmController implements BookingConfirmApi {
+    @Override
+    @RestMethod
+    public Response<DocSaveRespDTO> save(Request<AppendPropertiesDTO<BookingConfirmSaveParam>> request) {
+        Long userId = request.getHeader().getxUserId();
+        // TODO: 2023/7/11
+        return null;
+    }
+}
+
+```
+
+## 3. 配置管理规范
+- **配置中心**：系统配置变量默认必须使用 **Apollo** 进行管理。
+- **统一入口**：所有通过 Apollo 注入的配置变量，必须统一汇总到 `AppConfig.java` 类中进行管理。
+  - 禁止在业务代码（Service/Component等）中直接使用 `@Value` 注入零散的配置项。
+  - `AppConfig.java` 应作为配置的唯一视图。
+
+## 4. 消息队列 (MQ) 命名规范
+- **命名格式**：Exchange 和 Queue 的名称必须遵循以下标准：
+  - **格式**：`{app_id}_{系统}_{功能}`
+  - **示例**：`1001_oms_order_push`, `2002_tms_billing_calc`
+- **规范目的**：确保中间件资源在多系统环境下具有唯一性且易于追踪所属业务。
+
+## 5. 对象转换规范 (Transfer)
+- **直接映射**：在进行实体转换（如 `DTO` <-> `Entity` <-> `PO`）时，必须使用**属性直接映射**（即：手动编写 Setter/Getter 或使用构造函数赋值）。
+- **禁止 MapStruct**：本项目**严禁使用 MapStruct** 框架进行属性映射，以保持代码的显式性、可调试性，并降低学习与维护成本。
+
+## 6. 日志规范（Loggers）
+- **打日志时机**： 1）当主动捕获异常时，需要打`ERROR`日志 2）当调用第三方组件时，记录出入参 3）在出发入口记录日志，例如`JOB`、`MQ`。 4）`yqn-logging`已经实现了endpoint日志、Feign调用日志、DB调用日志
+- **日志级别**：使用 **ERROR, WARN, INFO ** 禁止使用自定义级别。
+- **使用类**: com.yqn.lib.logging.Loggers
+
+## 7. FeignClient 调用第三方服务规范
+
+**目录位置**：所有 FeignClient 接口必须定义在 `feign` 包下。
+
+**命名规范**：
+- 继承外部服务接口的 FeignClient，命名为 `Client` 后缀（如：`GeneralSettingClient`）
+  **配置规范**：
+- 服务名称必须通过配置变量注入，使用 `${service.name:default-service}` 格式
+- 必须提供默认值，确保在配置缺失时服务仍能正常启动
+
+**代码示例**：
+
+```java
+// 继承外部服务接口的 Client
+@FeignClient(value = "${general.service:general-service}")
+public interface GeneralSettingClient extends GeneralSettingService {
+}
+```
+
+## 8. XXL-JOB 任务规范
+
+### 8.1 目录与命名
+- **目录位置**：XXL-JOB 任务类统一放在业务模块的 `task` 包下，例如：`com.yqn.xxx.task`
+- **类命名**：任务处理器类统一使用 `Handler` 作为后缀，例如：`CleanLogHandler`
+- **Handler 名称**：`@JobHandler` 中的名称必须语义清晰，统一使用 `{业务动作}Handler` 格式，例如：`cleanLogHandler`
+
+### 8.2 类定义要求
+- **必须注解**：任务类必须同时添加 `@JobHandler` 和 `@Component`
+- **继承要求**：任务类必须继承 `IJobHandler`
+- **方法要求**：统一覆写 `execute(TriggerParam triggerParam)` 方法，返回值使用 `ReturnT<String>`
+
+### 8.3 职责边界
+- **任务类只做编排**：JobHandler 只负责参数读取、时间窗口计算、调用 Manager/Service 执行业务，不直接承载复杂业务逻辑
+- **业务下沉**：具体清理、同步、推送等操作必须下沉到 `manager` 或 `service` 层
+- **禁止重复造轮子**：时间处理、字符串处理等公共逻辑优先复用现有 `util` 工具类
+
+### 8.4 日志与异常处理
+- **入口日志**：定时任务属于明确入口，执行关键路径必须记录日志
+- **异常处理**：任务内部主动捕获异常时，必须使用 `Loggers.BIZ.error(...)` 记录错误日志
+- **返回约定**：执行成功返回 `ReturnT.SUCCESS`，执行失败返回 `ReturnT.FAIL`，禁止直接吞掉异常
+
+### 8.5 编码要求
+- **消除魔法值**：时间跨度、批次大小、重试次数等参数必须提取为 `private static final` 常量
+- **注释要求**：类注释、方法注释使用中文，说明任务用途、执行时机和处理范围
+- **依赖注入**：统一使用 Spring 注入业务管理类，例如 `@Resource` 或 `@Autowired`
+
+**推荐示例：**
+
+```java
+import com.xxl.job.core.biz.model.ReturnT;
+import com.xxl.job.core.biz.model.TriggerParam;
+import com.xxl.job.core.handler.IJobHandler;
+import com.xxl.job.core.handler.annotation.JobHandler;
+import com.yqn.lib.logging.Loggers;
+import com.yqn.util.DateUtils;
+import org.springframework.stereotype.Component;
+import javax.annotation.Resource;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.util.Date;
+@JobHandler(value = "cleanLogHandler")
+@Component
+public class CleanLogHandler extends IJobHandler {
+    
+    /**
+     * 
+     *
+     * @param triggerParam 任务触发参数
+     * @return 执行结果
+     */
+    @Override
+    public ReturnT<String> execute(TriggerParam triggerParam) {
+        try {
+            
+            return ReturnT.SUCCESS;
+        } catch (Exception e) {
+            Loggers.BIZ.error("清理历史日志任务执行失败", e);
+            return ReturnT.FAIL;
+        }
+    }
+}
+```
+
+## 9. 静态变量规范
+**目录位置**：公共静态变量都放到`util`下的`Constants`类下，例如：`DEFAULT_PAGESIZE`等
+
+## 10. 代码注释规范 (code-comment-spec)
+### 10.1 注释语言要求
+- **默认使用中文注释**：所有代码注释必须使用中文
+
+### 10.2 类注释
+- **必须包含**：
+  - 类的功能描述
+  - 创建者（可选）
+  - 创建日期（可选）
+- **格式示例**：
+```java
+/**
+ * 用户服务实现类
+ * 负责用户相关的业务逻辑处理，包括用户创建、查询、更新等操作
+ */
+@Service
+public class UserServiceImpl {
+    // ...
+}
+```
+
+### 10.3 方法注释
+- **必须包含**：
+  - 方法功能描述
+  - 参数说明（@param）
+  - 返回值说明（@return）
+  - 异常说明（@throws）
+- **格式示例**：
+```java
+/**
+ * 根据 ID 查询用户信息
+ * 
+ * @param userId 用户 ID，不能为空
+ * @return 用户信息对象，不存在返回 null
+ * @throws BusinessException 当用户不存在时抛出
+ */
+@Override
+public UserDTO getUserById(Long userId) {
+    // ...
+}
+```
+
+### 10.4 字段注释
+- **要求**：
+  - 每个成员变量必须有注释
+  - 注释说明字段的用途和约束条件
+- **格式示例**：
+```java
+/**
+ * 用户 ID，主键，自增
+ */
+private Long userId;
+
+/**
+ * 用户名，唯一，不能为空，长度 2-50 字符
+ */
+private String username;
+
+/**
+ * 用户状态：0-禁用，1-正常，2-锁定
+ */
+private Integer status;
+```
+
+## 11. 类实现规范
+- **非必要不用interface**:除了api接口定义，其他service、repository等等业务处理模块不用接口实现模式。
+- **Service继承规范**：Service 类优先直接继承 MyBatis-Plus 的 `ServiceImpl<Mapper, Entity>`，复用基础 CRUD 能力，避免额外定义无业务价值的 Service 接口。
+- **禁止内部类**：不要在类内部再定义类，包括静态内部类。将类拆分，每个类一个文件。
+- **静态公共方法**：静态公共方法必须定义到工具类中，放到`util`包下。例如时间转换，类型转换，header变量提取等等
+
+## 12. MyBatis SQL 编写规范
+- **SQL统一写XML**：自定义 SQL 必须写在 MyBatis XML 中，Mapper 接口只保留方法签名。
+- **禁止注解SQL**：禁止使用 `@Select`、`@Update`、`@Insert`、`@Delete` 等注解方式编写 SQL。
+- **复杂查询优先XML维护**：涉及动态条件、分页、排序、关联查询、批量写入或更新等场景，必须在 XML 中维护 SQL，便于审查和调优。

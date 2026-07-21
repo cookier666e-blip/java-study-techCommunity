@@ -1,17 +1,17 @@
 # Day 1：工程初始化与用户模块准备
 
-- 状态：进行中（功能点 2 待用户 Review）
+- 状态：进行中（功能点 3 待用户 Review）
 - 预计时间：5 小时 40 分钟
 - 前置条件：安装 Java 17、Maven、MySQL、Node.js 和 IDE
-- 用户确认：功能点 1 已确认；功能点 2 待 Review；功能点 3 未开始
+- 用户确认：功能点 1、2 已确认；功能点 3 待 Review
 
 ## 功能点进度
 
 | 功能点 | 状态 | Review 结论 |
 |---|---|---|
 | 1. 后端工程与健康检查 | 已确认 | 2026-07-20 用户确认通过 |
-| 2. 用户表设计与数据库脚本 | 待用户 Review | 待填写 |
-| 3. Vue 工程与前后端连通 | 未开始 | - |
+| 2. 用户表设计与数据库脚本 | 已确认 | 2026-07-20 用户确认通过 |
+| 3. Vue 工程与前后端连通 | 待用户 Review | 待填写 |
 
 ## 今日目标
 
@@ -97,7 +97,7 @@
 ## 功能点 2 执行记录
 
 - 执行日期：2026-07-20
-- 状态：待用户 Review
+- 状态：已确认
 - 完成内容：设计 `user`、`role`、`user_role` 三张表并生成 MySQL 8 版本化 SQL 脚本；修正开发环境默认数据库端口 `330 -> 3306`。
 - 脚本：`server/src/main/resources/db/schema/V001__create_user_tables.sql`
 - 业务代码：未创建 Entity、Mapper、Service、注册登录接口或 Vue 页面。
@@ -118,6 +118,7 @@
 - 删除用户后，对应 `user_role` 记录剩余数量为 `0`，级联删除符合设计。
 - 后端回归测试：`mvn -B test` 构建成功，3 个测试全部通过。
 - Review 重点：表名使用反引号处理 MySQL 关键字、唯一约束能否支持注册幂等、联合主键是否适合关联表、外键级联删除的边界、审计字段是否够用。
+- Review 结果：2026-07-20 用户确认功能点 2 通过，同意进入功能点 3。
 
 ### 学习建议
 
@@ -129,11 +130,38 @@
 
 用户与角色使用中间表建立多对多关系，联合主键保证同一用户不会被重复授予同一角色；用户名、邮箱和角色编码由数据库唯一约束兜底。状态使用 CHECK 限定取值，关联表使用外键维护引用完整性，并为从角色反查用户的查询方向增加索引。
 
+## 功能点 3 执行记录
+
+- 执行日期：2026-07-21
+- 状态：待用户 Review
+- 完成内容：创建 Vue 3 + TypeScript + Vite 前端骨架，接入 Vue Router、Pinia、Axios 和 Element Plus；首页调用后端健康检查接口并覆盖加载、成功、失败和重试状态。
+- 请求链路：`HomeView -> health.ts -> Axios -> /api/health -> Vite proxy -> Spring Boot:8080`。
+- 环境配置：前端开发端口为 `3000`；`VITE_API_BASE_URL=/api`；代理目标默认为 `http://localhost:8080`。
+- 业务范围：未创建注册、登录或其他用户业务页面，未修改后端接口与数据库结构。
+- 依赖问题：TypeScript 7 与 `vue-tsc 3.3.7` 的编译入口不兼容，已将 TypeScript 固定为兼容的 `5.9.3` 并更新锁文件。
+- 构建优化：Element Plus 从全量注册改为按需导入，构建后的 JavaScript 从约 `1038 KB` 降至约 `186 KB`。
+- 验证结果：`pnpm build` 通过 TypeScript 检查和 Vite 生产构建；通过 `http://127.0.0.1:3000/api/health` 实际返回 `UP / community-server`。
+- 当前环境：使用工作区提供的 Node.js 24.14.0 和 pnpm 11.9.0 完成验证；系统 PATH 尚未安装 Node.js，日常开发前仍需安装 Node.js LTS。
+- Review 重点：API 请求是否集中、错误状态是否完整、Vite 代理与 Axios `baseURL` 的职责、Pinia 是否避免保存页面局部状态、Element Plus 是否按需加载。
+
+### 学习建议
+
+1. 沿着 `onMounted -> loadHealth -> getHealth -> http.get -> Vite proxy -> Controller` 手动画一次调用链。
+2. 分清构建工具 Vite、UI 框架 Vue、路由 Vue Router、状态库 Pinia 和 HTTP 客户端 Axios 的职责。
+3. 分别关闭后端和重新启动后端，观察错误提示及“重新检查”按钮，理解前端为什么必须处理失败路径。
+
+### 面试表达
+
+前端采用 API 模块统一管理 Axios，页面只负责状态和交互；开发环境使用 Vite 代理把同源 `/api` 请求转发到 Spring Boot 8080，从而完成本地联调并避免为开发环境散落跨域配置。Pinia 已接入应用，但健康状态属于页面局部数据，因此使用 `ref` 而不是存入全局状态。
+
 ## 原理学习
 
 1. Spring Boot 为什么能通过启动类和依赖自动配置 Web 应用。
-2. IOC 容器为什么比手动 `new` 更适合管理企业项目对象。
-3. 一次 HTTP 请求如何经过 DispatcherServlet、Controller 并返回 JSON。
+   Spring Boot 用 @SpringBootApplication 开启自动配置和组件扫描；再根据 classpath 上的 starter（如 spring-boot-starter-web）条件装配内嵌 Tomcat、DispatcherServlet、Jackson 等。开发者只需声明依赖和业务 Controller，不必手写传统 XML/Servlet 初始化。
+3. IOC 容器为什么比手动 `new` 更适合管理企业项目对象。
+手动 new 适合小脚本；企业项目对象多、依赖复杂、要可测可替换。IOC 把创建和装配交给容器，业务类只关心协作关系，便于统一生命周期、替换实现、挂事务/安全和写单测。
+面试可补一句：IOC 解决「怎么创建」；DI（依赖注入）是手段；AOP 等能力通常也建立在「对象由容器管理」之上。
+4. 一次 HTTP 请求如何经过 DispatcherServlet、Controller 并返回 JSON。
 
 ## 面试问题
 
@@ -180,4 +208,57 @@ chore: initialize community backend and frontend
 面试表达：
 明日调整：
 用户确认结果：
-```
+``` 
+
+# 笔记
+## 代理
+proxy: {
+        "/api": {
+          target: env.VITE_DEV_PROXY_TARGET || "http://localhost:8080",
+          changeOrigin: true,
+        },
+      },
+代理只在 vite 开发服生效（pnpm dev）。pnpm build 后的静态资源没有这个 proxy，生产要自己配 Nginx/网关，或把 API 指到真实域名。
+changeOrigin: true 在多数后端场景建议开启；本项目后端在本机时通常也能正常工作。
+changeOrigin 写在 server.proxy 里，只作用于 Vite 开发服务器（pnpm dev）。pnpm build 之后产物是静态文件，线上一般由 Nginx / 网关 / CDN 提供，不会再跑这段 Vite proxy，所以这段配置生产里等于不存在。
+环境	              谁做转发	                              类似能力
+开发           Vite server.proxy                        changeOrigin: true
+生产            Nginx / 网关等                          proxy_set_header Host ... 等
+
+浏览器  ──请求──►  Vite(:3000)  ──再请求──►  后端(:8080)
+                        ↑                                              ↑
+ 浏览器只参与这一段          这是服务器之间的转发
+8080 是 Vite 进程自己去连的，属于服务端转发，不是浏览器发的跨域请求。CORS 只约束浏览器里的跨域，不约束服务器之间互相调。
+rewrite 是代理里的路径改写：把浏览器请求的 URL 路径改一下，再转发给后端。前后端库路径不一致时需要改路径。
+## 数据库
+AUTO_INCREMENT  自增
+COMMENT   注释
+TINYINT UNSIGNED：极小整数（范围 0-255），非常适合用来存储状态值（如 0 和 1），比 INT 节省大量空间。
+DEFAULT 1：设置默认值为 1。如果插入数据时不传 status，数据库会自动将其设为 1（启用状态）。   
+DATETIME(3)：毫秒级精度的时间类型。
+DEFAULT CURRENT_TIMESTAMP(3)：记录创建时间。插入数据时自动填入当前时间。
+ON UPDATE CURRENT_TIMESTAMP(3)：极其好用的特性。每次执行 UPDATE 语句修改该行数据时，MySQL 会自动将 updated_at 更新为当前时间，无需在 Java 代码里手动赋值。
+PRIMARY KEY  主键 ，唯一。一张表只能有 1 个，绝对不允许为 NULL。
+UNIQUE KEY    唯一索引，提供了主键无法替代的灵活性。一张表可以有多个，允许为 NULL（且多个 NULL 不冲突），加快查询速度。
+KEY    可以重复，加快查询速度
+FOREIGN KEY   外键
+CONSTRAINT `fk_user_role_user`
+        FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE,
+声明当前表的 user_id 字段引用了 user 表的 id 字段。这保证了数据的参照完整性（不能给不存在的用户分配角色）。
+ON DELETE CASCADE   级联删除。当 user 表中的某个用户被删除时，MySQL 会自动删除 user_role 表中所有包含该 user_id 的记录，防止产生孤儿脏数据。
+ENGINE = InnoDB：指定存储引擎为 InnoDB。InnoDB 是 MySQL 默认的引擎，支持事务（ACID）、行级锁和外键约束。
+DEFAULT CHARACTER SET = utf8mb4：设置表的默认字符集为 utf8mb4，支持存储完整的 Unicode 字符（包括 Emoji 表情）。
+COLLATE = utf8mb4_0900_ai_ci：设置排序规则。这是 MySQL 8.0 引入的基于 Unicode 9.0 的排序规则，ai 表示不区分重音（accent insensitive），ci 表示不区分大小写（case insensitive）。
+COMMENT = '...'：为整张表添加注释说明。
+## spring boot 
+请求实际链路：
+浏览器/Vite → http://localhost:8080/api/health
+                    ↓
+            内嵌 Tomcat（starter-web 自动配）
+                    ↓
+            DispatcherServlet（MVC 自动配）
+                    ↓
+            HealthController.health()（@ComponentScan 扫到）
+                    ↓
+            Jackson 把 HealthResponse 写成 JSON（自动配）
+你自己写的只有 Controller；Tomcat、Servlet、JSON 转换都是 starter + 自动配置给的。

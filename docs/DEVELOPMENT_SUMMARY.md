@@ -35,11 +35,28 @@
 - 用户反馈与结论：
 ```
 
+## 2026-07-21 - Day 1 - Vue 工程与前后端连通
+
+- 功能点：Day 1 功能点 3。
+- 代码批次：Vue 3 前端骨架、基础工程配置和健康检查联调。
+- 状态：待用户 Review。
+- 目标：建立可构建、可运行的 Vue 3 + TypeScript 前端，并通过首页完成一次真实后端请求，不进入注册登录开发。
+- 完成内容：配置 Vite、Vue Router、Pinia、Axios、Element Plus、TypeScript 和环境变量；增加统一 Axios 实例、健康检查 API、加载/成功/失败/重试页面状态和响应式基础样式；Element Plus 采用按需导入。
+- 主要文件：`web/package.json`、`web/pnpm-lock.yaml`、`web/vite.config.ts`、`web/src/main.ts`、`web/src/router/index.ts`、`web/src/api/http.ts`、`web/src/api/health.ts`、`web/src/views/HomeView.vue`、`web/src/styles/main.css`。
+- 接口变化：后端接口无变化；前端调用已有 `GET /api/health`。
+- 数据库变化：无。
+- 测试结果：`pnpm build` 完成 TypeScript 检查和生产构建；构建产物 JavaScript 约 186 KB；从前端端口 `3000` 经 Vite 代理请求后端端口 `8080`，真实返回 `UP / community-server`。
+- 问题与处理：TypeScript 7 与当前 `vue-tsc` 不兼容，固定到 TypeScript 5.9.3；Element Plus 全量注册造成约 1 MB 主包，改为四个组件按需导入后消除体积警告。
+- 学习建议：重点掌握组件生命周期触发请求、响应式状态、Axios 实例、环境变量和开发代理组成的完整调用链。
+- 面试表达：开发代理解决本地前后端端口不同的问题，Axios 实例统一超时和错误转换；局部页面状态保留在组件中，Pinia 只承载真正跨页面共享的数据。
+- Review 关注点：目录职责、请求错误处理、加载状态、环境配置、依赖版本锁定和前端包体积。
+- 用户反馈与结论：待填写。
+
 ## 2026-07-20 - Day 1 - 用户表设计与数据库脚本
 
 - 功能点：Day 1 功能点 2。
 - 代码批次：用户、角色和用户角色关系表设计。
-- 状态：待用户 Review。
+- 状态：已确认。
 - 目标：只完成三张用户相关表和版本化 MySQL 脚本，不进入 Java 用户业务与 Vue 开发。
 - 完成内容：新增 `user`、`role`、`user_role` 建表脚本；设计主键、唯一约束、查询索引、状态检查、审计时间和外键关系；修正开发配置中的 MySQL 默认端口 `330 -> 3306`。
 - 主要文件：`server/src/main/resources/db/schema/V001__create_user_tables.sql`、`server/src/main/resources/application-dev.yml`、`docs/learning/day-01.md`、`docs/PROJECT_OVERVIEW.md`。
@@ -49,7 +66,7 @@
 - 学习建议：重点区分应用层校验与数据库约束，理解多对多中间表、联合主键、外键和索引各自负责的问题。
 - 面试表达：用户与角色通过关联表建模多对多关系，以联合主键保证授权幂等，以唯一约束和外键作为数据库层最后一道一致性防线。
 - Review 关注点：字段长度与空值设计、约束和索引是否服务真实查询、级联删除策略、关键字表名的处理、是否严格保持功能点范围。
-- 用户反馈与结论：待填写。
+- 用户反馈与结论：2026-07-21 用户确认功能点 2 通过，同意进入 Day 1 功能点 3。@L : 主键 保证每条数据的可读性，唯一约束 方便代码判断唯一性，普通索引 方便排序 提高查询性能，外键保证引用完整性
 
 ## 2026-07-20 - Day 1 - 后端工程与健康检查
 
