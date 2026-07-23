@@ -205,8 +205,13 @@ MockMvc 是 Spring Test 模块提供的模拟 HTTP 客户端
 @Autowired MockMvc mockMvc 是 Spring Boot 测试 Web 层的标准配置**。必须搭配 @WebMvcTest（推荐）或 @SpringBootTest 才能生效。
 @Mock private UserMapper userMapper; 是 在单元测试中创建 MyBatis Mapper 接口的模拟对象，用于隔离数据库依赖，确保测试仅验证业务逻辑而非真实数据库操作
 
-
-
+我的问题>
+>RegisterResponse为什么放在dto下，dto不是入参吗?
+       DTO 不只是入参。 全称是 Data Transfer Object（数据传输对象），指在层与层、前后端之间传递的数据结构——请求体和响应体都算。
+       常见两种放法，本项目用第一种：
+                    dto/ 下放 XxxRequest + XxxResponse（或 XxxVO）
+                   或拆成 request/、response/ 两个子包（本质一样）
+                  所以：RegisterResponse 放在 dto 下是正确的——它是出参 DTO，不是「只有入参才能叫 DTO」。
 
 
 
