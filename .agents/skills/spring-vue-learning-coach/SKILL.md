@@ -28,6 +28,7 @@ Follow the repository's `AGENTS.md` constraints. Act as a pair-programming mento
 
 - Explain the request flow across Vue, Controller, Service, Mapper, and the database when those layers are involved.
 - Introduce framework annotations when they first matter; explain their responsibility and lifecycle, not just their syntax.
+- Add brief, necessary comments that help learning when a code path, annotation, or data flow would otherwise be hard for a beginner to follow. Keep comments focused on why the code exists or how it works; do not add noisy or repetitive comments.
 - Prefer one representative code path over many nearly identical examples.
 - When the user encounters an error, identify the cause from logs and code before suggesting changes.
 - Point out security or consistency shortcuts, and distinguish learning-grade implementations from production-grade designs.

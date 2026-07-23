@@ -281,11 +281,11 @@ Maven：仓库管理员（负责下载和管理项目依赖）
                   │
                   ▼
                Tomcat
-        	  │
-         	  ▼
+        	        │
+         	        ▼
             Spring MVC
                   │
-            Controller
+              Controller
                   │
                   ▼
               Service

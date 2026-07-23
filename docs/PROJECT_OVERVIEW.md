@@ -99,9 +99,10 @@ Vue 3
 
 ## 当前状态
 
-- 当前阶段：Day 1 执行中。
-- 已完成代码：后端 Maven 骨架、健康检查、Swagger、用户相关数据库脚本，以及 Vue 3 前端骨架和健康检查联调页面。
+- 当前阶段：Day 2 功能点 1 待用户 Review。
+- 已完成代码：Day 1 工程骨架和前后端联调，以及用户持久化、注册接口、BCrypt 密码保存、默认角色分配和统一异常处理。
 - 当前数据模型：`user` 与 `role` 通过 `user_role` 建立多对多关系；用户名、邮箱、角色编码和用户角色组合均由数据库保证唯一。
 - 当前前端链路：Vue 页面通过集中式 Axios API 模块请求 `/api/health`，开发环境由 Vite 将请求代理到 Spring Boot 8080。
-- 当前任务：Day 1 功能点 3 待用户 Review。
-- 下一验收点：功能点 3 经用户确认后，记录 Day 1 Review 结论，再决定是否执行当天 Git commit；未确认前不进入 Day 2。
+- 当前注册链路：`POST /api/auth/register -> DTO 校验 -> AuthService 事务 -> User/Role/UserRole Mapper -> MySQL`。
+- 当前任务：Day 2 功能点 1 待用户 Review。
+- 下一验收点：功能点 1 经用户确认后，才能开始功能点 2 的账号登录与 JWT 签发。

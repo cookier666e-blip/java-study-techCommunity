@@ -7,3 +7,10 @@
 8080：Spring Boot 后端服务端口，访问健康检查和 Swagger，例如 http://localhost:8080。
 3000：通常用于前端开发服务器，例如 React、Vue 的 Vite 开发服务。
 3306：MySQL 数据库默认端口，后端通过它连接 MySQL。
+
+ 目录：
+com.study.community
+├── auth/      ← 认证流程（注册、以后登录/JWT）
+├── user/      ← 用户领域数据（用户、角色、关系）
+├── common/    ← 跨模块共用能力
+└── CommunityApplication.java

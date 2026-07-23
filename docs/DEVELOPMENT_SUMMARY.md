@@ -35,11 +35,29 @@
 - 用户反馈与结论：
 ```
 
+## 2026-07-21 - Day 2 - 用户持久化与注册
+
+- 功能点：Day 2 功能点 1。
+- 代码批次：用户持久化、注册接口、BCrypt、默认角色与统一异常。
+- 状态：待用户 Review。
+- 目标：完成可真实落库的用户注册，不实现登录、JWT、Security 过滤器和 Vue 注册页。
+- 完成内容：新增用户、角色和关联实体及 Mapper；实现注册 DTO、参数校验、注册事务、用户名邮箱唯一检查、BCrypt 密码保存、默认 `USER` 角色分配、201 成功响应和统一错误响应。
+- 主要文件：`auth/controller/AuthController.java`、`auth/service/AuthService.java`、`auth/dto/RegisterRequest.java`、`auth/validation/*.java`、`user/entity/*.java`、`user/mapper/*.java`、`common/exception/*.java`、`V002__seed_default_user_role.sql`、`AuthServiceTest.java`、`AuthControllerTest.java`。
+- 接口变化：新增 `POST /api/auth/register`；成功返回 201，参数错误返回 400，重复用户名或邮箱返回 409。
+- 数据库变化：新增版本化数据脚本，写入启用状态的默认 `USER` 角色；原有表结构未改变。
+- 测试结果：`mvn -B test` 成功，12 个测试全部通过；覆盖成功注册、重复用户、并发唯一冲突、默认角色缺失、参数校验和 BCrypt 72 字节边界。隔离 MySQL 8.0.43 真实注册成功，数据库确认密码为 BCrypt 哈希、用户状态为 1、角色为 `USER`，重复和非法请求状态码符合约定。
+- 设计处理：`user_role` 使用联合主键，关联 Mapper 采用明确的 `@Insert`，避免把联合主键错误映射成 MyBatis-Plus 单一 `TableId`。
+- 学习建议：沿着 `DTO -> Controller -> Service/Transaction -> Mapper -> MySQL` 复述注册链路，重点理解 BCrypt、唯一约束和事务各自解决的问题。
+- 面试表达：业务预检查用于提供明确冲突信息，数据库唯一索引负责并发兜底；用户和默认角色在同一事务内写入，任何一步失败都会回滚。
+- Review 关注点：敏感信息、校验边界、异常码、并发唯一性、事务完整性、默认角色配置和测试覆盖。
+- 用户反馈与结论：
+      当前服务使用 3307 的隔离测试数据库。正式使用本机 MySQL 前需要依次执行 V001 和 [V002__seed_default_user_role.sql](D:/code/studyLyt/java_study/server/src/main/resources/db/schema/V002__seed_default_user_role.sql)。
+
 ## 2026-07-21 - Day 1 - Vue 工程与前后端连通
 
 - 功能点：Day 1 功能点 3。
 - 代码批次：Vue 3 前端骨架、基础工程配置和健康检查联调。
-- 状态：待用户 Review。
+- 状态：已确认。
 - 目标：建立可构建、可运行的 Vue 3 + TypeScript 前端，并通过首页完成一次真实后端请求，不进入注册登录开发。
 - 完成内容：配置 Vite、Vue Router、Pinia、Axios、Element Plus、TypeScript 和环境变量；增加统一 Axios 实例、健康检查 API、加载/成功/失败/重试页面状态和响应式基础样式；Element Plus 采用按需导入。
 - 主要文件：`web/package.json`、`web/pnpm-lock.yaml`、`web/vite.config.ts`、`web/src/main.ts`、`web/src/router/index.ts`、`web/src/api/http.ts`、`web/src/api/health.ts`、`web/src/views/HomeView.vue`、`web/src/styles/main.css`。
@@ -50,7 +68,7 @@
 - 学习建议：重点掌握组件生命周期触发请求、响应式状态、Axios 实例、环境变量和开发代理组成的完整调用链。
 - 面试表达：开发代理解决本地前后端端口不同的问题，Axios 实例统一超时和错误转换；局部页面状态保留在组件中，Pinia 只承载真正跨页面共享的数据。
 - Review 关注点：目录职责、请求错误处理、加载状态、环境配置、依赖版本锁定和前端包体积。
-- 用户反馈与结论：待填写。
+- 用户反馈与结论：2026-07-21 用户确认功能点 3 通过，同意进入 Day 2。
 
 ## 2026-07-20 - Day 1 - 用户表设计与数据库脚本
 
